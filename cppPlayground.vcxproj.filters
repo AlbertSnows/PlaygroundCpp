@@ -18,7 +18,13 @@
     <ClCompile Include="cppPlayground.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="rule_of_three.cpp">
+    <ClCompile Include="cpp_rules_of.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RAII.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MoreNotes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -128,7 +128,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="cppPlayground.cpp" />
-    <ClCompile Include="rule_of_three.cpp" />
+    <ClCompile Include="cpp_rules_of.cpp" />
+    <ClCompile Include="MoreNotes.cpp" />
+    <ClCompile Include="RAII.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="rule_of_three.h" />
