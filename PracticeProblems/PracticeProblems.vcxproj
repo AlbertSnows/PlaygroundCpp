@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{f80116b6-08ef-4a8c-ae86-a6996cf64e96}</ProjectGuid>
-    <RootNamespace>cppPlayground</RootNamespace>
+    <ProjectGuid>{7473124d-daaa-4908-8368-d50c4625d671}</ProjectGuid>
+    <RootNamespace>PracticeProblems</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -127,10 +127,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="cppPlayground.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="docs\rule_of_three.h" />
+    <ClCompile Include="..\src\practice\hackerrank\parser.cpp" />
+    <ClCompile Include="PracticeProblems.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -6,6 +6,29 @@
 /*
 * Analysis
 * you need a destructor, copy constructor, and copy assignment
+* 
+* constructing use cases - copy constructor copys without assigment. e.g. heap allocation, and many more, use make_unique
+* assignment - copying, moving with assignment, they use equals
+* 
+* moving - auto x = move(y);
+* copying - auto x = y;
+* 
+* auto& x = y; // reference allocation
+* 
+* 
+* e.g. string s = "oasneuthsaou" raii
+* or
+* string s2("aoeunshtoansuehas") constructor
+* or 
+* string s = { "oausntahoeus" aoseunthaouse" }
+* or
+* string s = new string("ouonauehts"); // constructor
+* or
+* string s2 = make_unique<string>("oeuasoeunth");
+* or
+* string s = "aouenht"; RAII
+* string s2 = s; // copy assignment
+* string s3(s); // copy constructor JUST SYNTAX !!
 */
 class rule_of_three
 {
