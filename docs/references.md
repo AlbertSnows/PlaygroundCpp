@@ -1,0 +1,1 @@
+https://www.stroustrup.com/good_concepts.pdf

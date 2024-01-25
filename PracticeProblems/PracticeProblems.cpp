@@ -2,10 +2,20 @@
 //
 
 #include <iostream>
+#include <print>
+#include "parser.h"
+#include "example.h"
+using std::cout;
+using std::endl;
+using std::println;
 
 int main()
 {
     std::cout << "Hello World!\n";
+    auto x = 69;
+    println("Name: {}", x);
+    //cout << example() << endl;
+    entry();
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
