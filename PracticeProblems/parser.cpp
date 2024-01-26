@@ -27,6 +27,9 @@ using std::views::split;
 using std::views::filter;
 using std::regex;
 using std::sregex_token_iterator;
+using std::sregex_iterator;
+using std::smatch;
+using std::regex_search;
 class Element {
 public:
 	const string name;
@@ -52,63 +55,65 @@ vector<int> range(const int& end, const int& start = 0, const int& step_size = 1
 	return list;
 }
 
+vector<string> parse_on_regex(string unparsed, regex pattern) {
+	// Create an iterator over the matches in the input string
+	sregex_iterator iter(unparsed.begin(), unparsed.end(), pattern);
+	sregex_iterator end;
+	// Iterate over the matches and print key-value pairs
+	auto attribute_pairs = vector<string>();
+	while (iter != end) {
+		std::smatch match = *iter;
+		attribute_pairs.push_back(match.str());
+		++iter;
+	}
+	return attribute_pairs;
+}
+
 unordered_map<string, Element> parseHRMLOpeners(vector<string> unparsedHRMLOpeningTags) {
-	auto opening_string = unparsedHRMLOpeningTags
+	auto unparsed_tag_data = unparsedHRMLOpeningTags
 		| transform([](const string& str) { 
 		string string_without_end_tags = str.substr(1, str.length() - 2);
 		return string_without_end_tags; 
 		})
 		| to<vector<string>>();
-	auto HTRMLOpeningTokens = opening_string
-		| transform([](const string& str) {
-		vector<string> split_string = (split(str, ' ') | to<vector<string>>());
-		return split_string;
-			})
-		| to <vector<vector<string>>>();
-	vector<string> tagnames = HTRMLOpeningTokens
-		| transform([](const vector<string>& opener_list) { return opener_list[0]; })
-		| to<vector<string>>();
-	auto attribute_tokens = HTRMLOpeningTokens
-		| transform([](const vector<string>& opener_list) {
-		return vector<string>(opener_list.begin() + 1, opener_list.end());
-			})
-		| to<vector<vector<string>>>();
-	auto attribute_list = attribute_tokens
-		| transform([](const vector<string>& attribute_token_list) {
-		auto tokenIndexes = range(attribute_token_list.size());
-		auto equalIndexes = tokenIndexes
-			| filter([&attribute_token_list](const auto& i) {
-			string token = attribute_token_list[i];
-			return token == "="; });
-		auto attributePairs = accumulate(equalIndexes.begin(), equalIndexes.end(), vector<pair<string, string>>{},
-			[&attribute_token_list](vector<pair<string, string>> acc, const auto& index) {
-				auto stripped_attribute = attribute_token_list[index + 1];
-				stripped_attribute.erase(remove(stripped_attribute.begin(), stripped_attribute.end(), '\"'), stripped_attribute.end());
-				auto attributePair = pair(attribute_token_list[index - 1], stripped_attribute);
-				acc.push_back(attributePair);
-				return acc;
-			});
-		return attributePairs;
-			})
-		| to<vector<vector<pair<string, string>>>>();
-	auto tagIndexes = range(tagnames.size()); // sublist?
-	vector<Element> elements = accumulate(tagIndexes.begin(), tagIndexes.end(), vector<Element>{},
-		[tagnames, attribute_list](vector<Element> elements, const int& index) {
-			auto attribute_map = unordered_map<string, string>(attribute_list[index].begin(), attribute_list[index].end());
-			auto element = Element(tagnames[index], attribute_map);
+	auto list_of_tags_with_unparsed_attributes = unparsed_tag_data
+		| transform([](string str) {
+			auto tag_position= str.find(' ');
+			string tagname = str.substr(0, tag_position);
+			string unparsed_attributes = str.substr(tag_position + 1);
+			unparsed_attributes.erase(remove_if(unparsed_attributes.begin(), unparsed_attributes.end(), ::isspace), unparsed_attributes.end());
+			auto break_on_second_quote = regex("[^\"]*\"[^\"]*\"");
+			auto unparsed_attributes_list = parse_on_regex(unparsed_attributes, break_on_second_quote);
+			auto attribute_pair_list = vector<pair<string, string>>{};
+			for (string unparsed_attribute : unparsed_attributes_list) {
+				auto attribute_split_position = unparsed_attribute.find("=");
+				auto tagname = unparsed_attribute.substr(0, attribute_split_position);
+				auto attribute_value = unparsed_attribute.substr(attribute_split_position + 1);
+				attribute_pair_list.push_back(pair(tagname, attribute_value));
+			}
+			return pair(tagname, attribute_pair_list);
+		})
+		| to <vector<pair<string, vector<pair<string, string>>>>>();
+
+	vector<Element> elements = accumulate(list_of_tags_with_unparsed_attributes.begin(), list_of_tags_with_unparsed_attributes.end(), vector<Element>{},
+		[](vector<Element> elements, const pair<string, vector<pair<string, string>>>& tags_with_attribute_pairs_list) {
+			auto tagname = tags_with_attribute_pairs_list.first;
+			auto attribute_pair_list = tags_with_attribute_pairs_list.second;
+			auto attribute_map = unordered_map<string, string>(attribute_pair_list.begin(), attribute_pair_list.end());
+			auto element = Element(tagname, attribute_map);
 			elements.push_back(element);
 			return elements;
 		});
-	for (auto index : vector(0, tagIndexes.size() - 1)) {
+	for (auto index : range(elements.size())) {
 		auto current_element = elements[index];
 		auto next_element = elements[index + 1];
 		current_element.addChildren(next_element);
 	}
-	auto nameToElement = accumulate(elements.begin(), elements.end(), unordered_map<string, Element>{}, [](auto acc, auto element) {
+	auto nametoelement = accumulate(elements.begin(), elements.end(), unordered_map<string, Element>{}, [](auto acc, auto element) {
 		acc.emplace(element.name, element);
 		return acc;
 		});
-	return nameToElement;
+	return unordered_map<string, Element>{};
 };
 
 vector<string> split_by_regex(const string& s, const regex& pattern) {
@@ -143,15 +148,11 @@ vector<pair<string, string>> parseHRMLQueries(vector<string> unparsedQueries) {
 int entry() {
 	/* Enter your code here. Read input from STDIN. Print output to STDOUT */
 	// read from stdin
-	//4 3
-	//    < / tag2>
-	//    < / tag1>
-	//    tag1.tag2~name
-	//    tag1~name
-	//    tag1~value
+
 	auto unparsedHRMLTags = vector<string>{
 		"<tag1 value = \"HelloWorld\">",
 		"<tag2 name = \"Name1\">",
+		"<tag3 name=\"Name1\" other=\"blairisaweeb\">",
 		"</tag2>",
 		"</tag1>" };
 	auto unparsedQueries = vector<string>{
