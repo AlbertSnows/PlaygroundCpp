@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <string>
-#include <ranges>
+//#include <ranges>
 #include <span>
 #include <numeric>
 #include <regex>
@@ -15,16 +15,16 @@
 using std::string;
 using std::unordered_map;
 using std::vector;
-using std::ranges::to;
 using std::span;
 using std::pair;
 using std::accumulate;
 using std::cout;
 using std::endl;
 using std::generate; 
-using std::views::transform;
-using std::views::split;
-using std::views::filter;
+//using std::ranges::to;
+//using std::views::transform;
+//using std::views::split;
+//using std::views::filter;
 using std::regex;
 using std::sregex_token_iterator;
 using std::sregex_iterator;
@@ -70,14 +70,14 @@ vector<string> parse_on_regex(string unparsed, regex pattern) {
 }
 
 unordered_map<string, Element> parseHRMLOpeners(vector<string> unparsedHRMLOpeningTags) {
-	auto unparsed_tag_data = unparsedHRMLOpeningTags
-		| transform([](const string& str) { 
+	auto unparsed_tag_data = accumulate(unparsedHRMLOpeningTags.begin(), unparsedHRMLOpeningTags.end(), vector<string>{}, 
+		[](vector<string> acc, const string& str) {
 		string string_without_end_tags = str.substr(1, str.length() - 2);
-		return string_without_end_tags; 
-		})
-		| to<vector<string>>();
-	auto list_of_tags_with_unparsed_attributes = unparsed_tag_data
-		| transform([](string str) {
+		acc.push_back(string_without_end_tags);
+		return acc; 
+		});
+	auto list_of_tags_with_unparsed_attributes = accumulate(unparsed_tag_data.begin(), unparsed_tag_data.end(), vector<pair<string, vector<pair<string, string>>>>{}, 
+		[](vector<pair<string, vector<pair<string, string>>>> acc, string str) {
 			auto tag_position= str.find(' ');
 			string tagname = str.substr(0, tag_position);
 			string unparsed_attributes = str.substr(tag_position + 1);
@@ -88,12 +88,14 @@ unordered_map<string, Element> parseHRMLOpeners(vector<string> unparsedHRMLOpeni
 			for (string unparsed_attribute : unparsed_attributes_list) {
 				auto attribute_split_position = unparsed_attribute.find("=");
 				auto tagname = unparsed_attribute.substr(0, attribute_split_position);
-				auto attribute_value = unparsed_attribute.substr(attribute_split_position + 1);
+				auto attribute_value_with_quotes = unparsed_attribute.substr(attribute_split_position + 1);
+				auto attribute_value = attribute_value_with_quotes.substr(1, attribute_value_with_quotes.size() - 2);
 				attribute_pair_list.push_back(pair(tagname, attribute_value));
 			}
-			return pair(tagname, attribute_pair_list);
-		})
-		| to <vector<pair<string, vector<pair<string, string>>>>>();
+			auto tags_with_attributes = pair(tagname, attribute_pair_list);
+			acc.push_back(tags_with_attributes);
+			return acc;
+		});
 
 	vector<Element> elements = accumulate(list_of_tags_with_unparsed_attributes.begin(), list_of_tags_with_unparsed_attributes.end(), vector<Element>{},
 		[](vector<Element> elements, const pair<string, vector<pair<string, string>>>& tags_with_attribute_pairs_list) {
@@ -104,16 +106,16 @@ unordered_map<string, Element> parseHRMLOpeners(vector<string> unparsedHRMLOpeni
 			elements.push_back(element);
 			return elements;
 		});
-	for (auto index : range(elements.size())) {
+	for (auto index : range(elements.size() - 2)) {
 		auto current_element = elements[index];
 		auto next_element = elements[index + 1];
 		current_element.addChildren(next_element);
 	}
-	auto nametoelement = accumulate(elements.begin(), elements.end(), unordered_map<string, Element>{}, [](auto acc, auto element) {
+	auto name_to_element = accumulate(elements.begin(), elements.end(), unordered_map<string, Element>{}, [](auto acc, auto element) {
 		acc.emplace(element.name, element);
 		return acc;
 		});
-	return unordered_map<string, Element>{};
+	return name_to_element;
 };
 
 vector<string> split_by_regex(const string& s, const regex& pattern) {
@@ -131,11 +133,11 @@ vector<string> split_by_regex(const string& s, const regex& pattern) {
 }
 
 vector<pair<string, string>> parseHRMLQueries(vector<string> unparsedQueries) {
-	auto splitQueries = unparsedQueries | transform([](string query) {
+	auto splitQueries = accumulate(unparsedQueries.begin(), unparsedQueries.end(), vector<vector<string>>{}, [](vector<vector<string>> acc, string query) {
 		vector<string> split_query = split_by_regex(query, regex("[.~]"));
-		return split_query;
-		})
-		| to<vector<vector<string>>>();
+		acc.push_back(split_query);
+		return acc;
+		});
 	auto lengthToProperty = accumulate(splitQueries.begin(), splitQueries.end(), vector<pair<string, string>>{},
 		[](auto acc, auto query_token) {
 			auto length = query_token.size();
@@ -161,11 +163,15 @@ int entry() {
 		"tag1~value",
 		"tag1.tag2~name"};
 
-	auto openingTagsView = unparsedHRMLTags | filter([](string str) {
-		return str[1] != '/';
+	auto openingTagsView = accumulate(unparsedHRMLTags.begin(), unparsedHRMLTags.end(), vector<string>{}, [](vector<string> acc, string str) {
+		auto ending_tag = str[1] == '/'; 
+		if (!ending_tag) {
+			acc.push_back(str);
+		}
+		return acc;
 		});
 	auto unparsedHRMLOpeningTags = vector(openingTagsView.begin(), openingTagsView.end());
-	//// elements *should* be fully populated
+	// elements *should* be fully populated
 	auto elements = parseHRMLOpeners(unparsedHRMLOpeningTags);
 	auto queryWithAttribute = parseHRMLQueries(unparsedQueries);
 
