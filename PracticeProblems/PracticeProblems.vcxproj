@@ -129,10 +129,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="deep_graph_copy.cpp" />
     <ClCompile Include="parser.cpp" />
     <ClCompile Include="PracticeProblems.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="deep_graph_copy.h" />
+    <ClInclude Include="Node.h" />
     <ClInclude Include="parser.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -3,8 +3,10 @@
 
 #include <iostream>
 #include <print>
-#include "parser.h"
-#include "example.h"
+#include "deep_graph_copy.h"
+#include "Node.h"
+//#include "parser.h"
+//#include "example.h"
 using std::cout;
 using std::endl;
 using std::println;
@@ -12,10 +14,16 @@ using std::println;
 int main()
 {
     std::cout << "Hello World!\n";
-    auto x = 69;
-    println("Name: {}", x);
+    auto blairisaweeb = 69;
+    println("Name: {}", blairisaweeb);
+
+    Node x = Node(1);
+    auto y = Node(2);
+    x.neighbors.push_back(&y);
+    cloneGraph(&x);
+
     //cout << example() << endl;
-    entry();
+    //entry();
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
