@@ -34,15 +34,36 @@ struct hash<pair<int, int>>
 
 void si_entry() {
 	vector<tuple<int, int, int>> list_of_left_right_weight_friendship = {
+		make_tuple(1, 2, 1),
 		make_tuple(1, 2, 2),
-		make_tuple(1, 2, 3),
 		make_tuple(2, 3, 1),
 		make_tuple(2, 3, 3),
-		make_tuple(2, 4, 4) };
+		make_tuple(2, 4, 3),
+		make_tuple(4, 5, 1),
+		make_tuple(4, 5, 2)
+	};
 	//string line;
 	//while (getline(cin, line) && !line.empty()) {
 	//	lines.push_back(line);
 	//}
+	auto coord_to_number_of_interests = accumulate(list_of_left_right_weight_friendship.begin(), list_of_left_right_weight_friendship.end(),
+		unordered_map<pair<int, int>, int>{},
+		[](auto coord_to_num_of_interests, auto tuple) {
+			auto left = get<0>(tuple);
+			auto right = get<1>(tuple);
+			auto left_pair = make_pair(left, right);
+			auto right_pair = make_pair(right, left);
+			auto coord_already_exists = coord_to_num_of_interests.find(left_pair) != coord_to_num_of_interests.end();
+			if (coord_already_exists) {
+				coord_to_num_of_interests[left_pair] += 1;
+				coord_to_num_of_interests[right_pair] += 1;
+			}
+			else {
+				coord_to_num_of_interests[left_pair] = 1;
+				coord_to_num_of_interests[right_pair] = 1;
+			}
+			return coord_to_num_of_interests;
+		});
 
 	auto weights = accumulate(list_of_left_right_weight_friendship.begin(), list_of_left_right_weight_friendship.end(), 
 		unordered_set<int>{},
@@ -100,12 +121,12 @@ void si_entry() {
 			}
 		}
 	}
-	auto max_weight_possible = accumulate(coord_to_number_of_shared_interests.begin(), coord_to_number_of_shared_interests.end(), 0,
+	auto max_weight_possible = accumulate(coord_to_number_of_interests.begin(), coord_to_number_of_interests.end(), 0,
 		[](auto max_weight, auto pair) {
 		return max(max_weight, pair.second);
 		});
 	auto coords_with_max_weight_possible = unordered_map<pair<int, int>, int>{};
-	for (auto pair : coord_to_number_of_shared_interests) {
+	for (auto pair : coord_to_number_of_interests) {
 		if (pair.second == max_weight_possible) {
 			coords_with_max_weight_possible.emplace(pair);
 		}
