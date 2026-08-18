@@ -11,10 +11,40 @@
 #include <iostream>
 #include <vector>
 #include <numeric>
-#include <climits>
 using namespace std;
 
+template<typename... Args>
+void dbg(Args&&... args) {
+    ((cout << args << " "), ...);
+    cout << "\n";
+}
+
+
 int maxGainStreak(const vector<int>& changes) {
+    int start = 1;
+    auto max_sum = changes[0];
+    auto end = changes.size() - 1;
+    auto running_sum = changes[0];
+    while (start <= end) {
+        const auto value = changes[start];
+        // dbg(start, value, running_sum, max_sum);
+        if (value > (running_sum + value)) {
+            running_sum = value;
+        } else {
+            running_sum += value;
+        }
+        if (running_sum > max_sum) {
+            max_sum = running_sum;
+        }
+        // dbg(start, running_sum, max_sum, value);
+        // printf("===\n");
+        start++;
+    }
+    return max_sum;
+}
+
+
+int maxGainStreak_a1(const vector<int>& changes) {
     // TODO: implement Kadane's algorithm
     // -2, 1, -3
     // start at ends, -2, 4
@@ -25,13 +55,14 @@ int maxGainStreak(const vector<int>& changes) {
     // if ever larger than current run, update current run
     // repeat until left index >= right
     auto left_index = 0;
-    printf("testeee");
     auto right_index = changes.size() -1;
     auto total_sum = std::accumulate(changes.begin(), changes.end(), 0);
     auto current_length = right_index;
+    auto current_sum = total_sum;
     while (left_index < right_index) {
         const auto left_value = changes[left_index];
         const auto right_value = changes[right_index];
+        dbg(left_index,left_value, "|", right_index, right_value, "|", current_sum, total_sum);
         const auto left_is_smaller = left_value < right_value;
         const auto same_value = left_value == right_value;
         auto value_to_sum = 0;
@@ -52,10 +83,11 @@ int maxGainStreak(const vector<int>& changes) {
             right_index -= 1;
             value_to_sum = right_value;
         }
-        if ((total_sum + value_to_sum) > total_sum) {
-            total_sum += value_to_sum;
-            current_length -= 1;
+        if ((current_sum - value_to_sum) > total_sum) {
+            total_sum = current_sum - value_to_sum;
         }
+        current_length -= 1;
+        current_sum -= value_to_sum;
     }
     return total_sum;
 }
@@ -67,10 +99,15 @@ void check(const vector<int>& input, int expected) {
 }
 
 int main() {
-    check({-2, 1, -3, 4, -1, 2, 1, -5, 4}, 6);
+    check({-2, 1, -3, 4, -1, 2, 1, -5, 4}, 6);  // 4 -1 2 1
     check({1, 2, 3, 4}, 10);
     check({-1, -2, -3}, -1);   // all negative: must still pick a non-empty run
     check({5}, 5);
-    check({-3, 8, -1, 2, -5, 6}, 9); // 8, -1, 2 = 9? check: -3,8,-1,2 -> best is 8-1+2=9
+    check({-3, 8, -1, 2, -5, 6}, 10);
+    check({6, -3, -4, 8, 3}, 11);
+    check({2, 10, -8, -10, -2, 4, -7, -2}, 12);
+    check({0, 0, -7, 5, -7, 5, 3, -9}, 8);
+    check({2, 1, 7, -6, -7, 9, 5, -6}, 14);
+
     return 0;
 }
