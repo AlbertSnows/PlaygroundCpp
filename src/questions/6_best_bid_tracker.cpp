@@ -1,9 +1,5 @@
 // PROBLEM: Best Bid Tracker
 //
-// Real reported Wolverine question (paraphrased): "keep track of the
-// highest bid for all stocks, and report when the highest bid price
-// changes after processing market data."
-//
 // You're given a stream of bid events, each a (symbol, price) pair, in
 // the order they arrive. Whenever a symbol's best (highest) bid seen so
 // far increases, record an update for that symbol. Bids that don't beat
@@ -15,19 +11,35 @@
 //   -> [("AAPL",100), ("MSFT",50), ("AAPL",105), ("MSFT",55)]
 //   (AAPL,102 doesn't beat AAPL's existing best of 105, so no update)
 //
-// Hash map for O(1) per-symbol lookup pattern -- see docs/techniques.md.
 // Fill in bestBidUpdates() below. Target: O(n) time.
 
 #include <iostream>
 #include <vector>
 #include <string>
 #include <utility>
+#include <unordered_map>
 using namespace std;
 
 vector<pair<string, int>> bestBidUpdates(const vector<pair<string, int>>& events) {
-    // TODO: implement using an unordered_map<string, int> of best-seen
+    unordered_map<string, int> symbol_state = unordered_map<string, int>();
+    vector<pair<string, int>> changes = vector<pair<string, int>>();
+    for (pair<string, int> event : events) {
+        auto symbol = event.first;
+        auto new_price = event.second;
+        auto symbol_exists = symbol_state.find(symbol) != symbol_state.end();
+        auto symbol_exists_and_higher_price = symbol_exists && symbol_state[symbol] < new_price;
+        if (symbol_exists_and_higher_price || !symbol_exists) {
+            symbol_state[symbol] = new_price;
+            changes.push_back(event);
+        }
+    }
+    // create hash map
+    // for (tuple id_with_price : events) {
+    // if not exist -> add
+    // if exist -> check if larger, then update
+    // record all changes
     // price per symbol
-    return {};
+    return changes;
 }
 
 void printUpdates(const vector<pair<string, int>>& v) {

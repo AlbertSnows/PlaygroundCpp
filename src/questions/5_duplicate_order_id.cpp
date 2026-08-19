@@ -5,18 +5,22 @@
 // to right, the ID value at the point its *second* occurrence appears), or
 // -1 if every ID is unique.
 //
-// Example: ids = [101, 102, 103, 102, 104]
-//   101 new, 102 new, 103 new, 102 -> already seen -> return 102
-//
-// Classic "hash map for O(1) lookup" pattern -- see docs/techniques.md.
 // Fill in firstDuplicateOrder() below. Target: O(n) time.
 
 #include <iostream>
 #include <vector>
+#include <unordered_set>
 using namespace std;
 
 int firstDuplicateOrder(const vector<int>& ids) {
-    // TODO: implement using a hash set to track seen IDs
+    unordered_set<int> visited_ids = unordered_set<int>();
+    for (int index = 0; index < static_cast<int>(ids.size()); index++) {
+        auto current_id = ids[index];
+        if (visited_ids.find(current_id) != visited_ids.end()) {
+            return current_id;
+        }
+        visited_ids.insert(current_id);
+    }
     return -1;
 }
 

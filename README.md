@@ -42,3 +42,5 @@ and set:
 - **C Compiler**: `/usr/bin/gcc`
 - **C++ Compiler**: `/usr/bin/g++`
 
+See `docs/` for prep material (techniques, questions, system design).
+

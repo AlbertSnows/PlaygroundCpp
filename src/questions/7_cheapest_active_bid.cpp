@@ -1,8 +1,5 @@
 // PROBLEM: Cheapest Active Bid
 //
-// Real reported Wolverine question (paraphrased): "keep track of the
-// cheapest bid for a stock given a series of new bid posts and buys."
-//
 // You're given a sequence of operations on a single stock's resting bids:
 //   POST <price>  -- add a new resting bid at that price
 //   BUY           -- execute against and remove the single cheapest
@@ -15,10 +12,7 @@
 //   (BUY removes 100 -> cheapest becomes 105; BUY removes 98 -> cheapest
 //    becomes 105 again; BUY removes 105 -> cheapest becomes 110)
 //
-// New pattern vs. the other problems here: you need "insert, and always
-// be able to query/remove the minimum" -- a min-heap (std::priority_queue
-// with std::greater, or a std::multiset) is the natural fit, not a plain
-// array scan. Fill in cheapestAfterEachOp() below. Target: O(log n) per
+// Fill in cheapestAfterEachOp() below. Target: O(log n) per
 // operation.
 
 #include <iostream>
