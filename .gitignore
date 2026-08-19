@@ -364,3 +364,8 @@ FodyWeavers.xsd
 /cmake-build-debug/
 .idea
 run
+
+# Not using Visual Studio -- CLion/g++ only
+*.sln
+*.vcxproj
+*.vcxproj.filters
