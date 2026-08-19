@@ -3,11 +3,11 @@ project(PlaygroundCpp)
 
 set(CMAKE_CXX_STANDARD 17)
 
-include_directories(wolverine)
+include_directories(src)
 
 add_executable(PlaygroundCpp
-        questions/1_max_gain_streak.cpp
-        questions/2_price_divergence.cpp
-        questions/3_largest_palindrome_product.cpp
-        helpers/helpers.hpp
+        src/questions/1_max_gain_streak.cpp
+        src/questions/2_price_divergence.cpp
+        src/questions/3_largest_palindrome_product.cpp
+        src/helpers/helpers.hpp
 )
