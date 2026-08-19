@@ -24,3 +24,30 @@ These come up directly in the live interview round, not as coding problems:
     those gaps (48/5 each), so the first ace lands after 48/5 + 1 = 10.6
     cards on average. (This is the "slightly advanced" style Wolverine
     candidates report — see docs/mini_project_research.md.)
+
+## Finance-adjacent (option theory)
+Some candidates specifically reported option theory coming up — distinct
+from the CS/coding/probability content above:
+
+- **Call vs. put** — a call is the *right, not obligation*, to *buy* the
+  underlying at a fixed strike price by/at expiration; a put is the right
+  to *sell* at the strike. The buyer pays a premium for that right; the
+  writer (seller) collects the premium and takes on the obligation to
+  fulfill the trade if the buyer exercises.
+- **In the money / out of the money / at the money** — for a call: ITM
+  means current price > strike (exercising would be profitable, before
+  accounting for the premium already paid), OTM means current price <
+  strike, ATM means current price ≈ strike. For a put, ITM/OTM flip: ITM
+  means current price < strike.
+- **Intrinsic value vs. time value** — an option's premium splits into
+  intrinsic value (what it'd be worth if exercised right now — how far
+  ITM it is, floored at 0) plus time value (extra value reflecting the
+  chance it becomes more valuable before expiration). Time value decays
+  toward 0 as expiration approaches — "theta decay."
+- **Black-Scholes, conceptually** (not the derivation) — prices European-
+  style options from five inputs: current price, strike, time to
+  expiration, risk-free rate, and volatility. Two intuitions worth having
+  ready: higher volatility → higher option price (more uncertainty = more
+  chance of a large favorable move), and more time to expiration → higher
+  price (more time value). Assumes the underlying follows a lognormal
+  random walk (geometric Brownian motion) with no arbitrage opportunities.

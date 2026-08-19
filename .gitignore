@@ -369,3 +369,4 @@ run
 *.sln
 *.vcxproj
 *.vcxproj.filters
+/docs/mini_project_research.md

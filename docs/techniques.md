@@ -26,7 +26,17 @@ interview like this one:
 - **Hash map for O(1) lookup / counting** — signal: "have I seen this value
   before," "two numbers summing to a target," "find duplicates," frequency
   counting. Technique: one pass building/checking a hash map instead of
-  nested loops. 
+  nested loops. Also fits "track the best value *per key*" (problem #6 —
+  best bid per stock symbol): a hash map from key to running best,
+  updated in one pass.
+
+- **Min-heap (or multiset) for "insert, and always know the min/max"** —
+  signal: a stream of add/remove operations where you repeatedly need the
+  current smallest (or largest) active value (problem #7 — cheapest
+  active bid given posts and buys). Technique: `priority_queue<int,
+  vector<int>, greater<int>>` for a min-heap, or `std::multiset<int>` if
+  you also need arbitrary removal, not just remove-the-min. O(log n) per
+  operation instead of an O(n) scan every time.
 
 - **Brute force, then prune** — signal: "find the largest/best combination
   satisfying constraints," explicitly told to brute-force first then

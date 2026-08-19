@@ -3,8 +3,6 @@
 Problem files live under `questions/`. Commands below assume you're running
 from this repo's root (`PlaygroundCpp/`).
 
-See `docs/gameplan.md` for the current prep plan and priority order.
-
 ## Building & running
 
 Compile and run any file with:
@@ -50,6 +48,8 @@ and set:
 3. `3_largest_palindrome_product.cpp` — brute force vs. optimized, with timing
 4. `4_volume_spike_window.cpp` — fixed-size sliding window (max sum of any K consecutive days)
 5. `5_duplicate_order_id.cpp` — hash-set lookup (first repeated order ID)
+6. `6_best_bid_tracker.cpp` — hash map, per-symbol running max (real reported Wolverine question)
+7. `7_cheapest_active_bid.cpp` — min-heap, insert + remove-min (real reported Wolverine question)
 
 ## Mini project (`mini_project/`)
 
@@ -61,7 +61,6 @@ g++ -std=c++17 -O2 mini_project/main.cpp mini_project/order_book.cpp -o run && .
 ```
 
 ## Other docs
-- `docs/gameplan.md` — current prep plan and priority order
 - `docs/mini_project_research.md` — research on Wolverine's actual assessment format and trading-firm mini-project themes
 - `docs/questions.md` — conceptual questions for the live round (pointers/references, class/object, hash table/linked list, expected-value brainteasers)
 - `docs/techniques.md` — pattern-matching cheat sheet for coding problems
