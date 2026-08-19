@@ -19,12 +19,33 @@
 #include <vector>
 #include <string>
 #include <utility>
+#include <queue>
+#include "helpers/helpers.hpp"
 using namespace std;
 
 // op is "POST" or "BUY"; price is meaningless for "BUY" (pass anything).
 vector<int> cheapestAfterEachOp(const vector<pair<string, int>>& ops) {
-    // TODO: implement using a min-heap (priority_queue<int, vector<int>, greater<int>>)
-    return {};
+    // every buy drops the cheapest bid
+    // adding a post lists a new value, but cheapest should stay at the top
+    priority_queue<int, vector<int>, greater<>> cheapest_tracker = priority_queue<int, vector<int>, greater<>>();
+    vector<int> action_tracker = vector<int>();
+    for (const pair<string, int>& op : ops) {
+        auto type = op.first;
+        auto value = op.second;
+        if (type == "POST") {
+            cheapest_tracker.push(value);
+            action_tracker.push_back(cheapest_tracker.top());
+        } else if (!cheapest_tracker.empty()) {
+            // printf("buying");
+            // if buy, remove cheapest
+            cheapest_tracker.pop();
+            action_tracker.push_back(cheapest_tracker.top());
+        } else {
+            action_tracker.push_back(-1);
+        }
+        // dbg(vecToString(action_tracker));
+    }
+    return action_tracker;
 }
 
 void printVec(const vector<int>& v) {
