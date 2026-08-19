@@ -1,7 +1,9 @@
 # Wolverine Trading / Coderbyte C++ practice
 
 Problem files live under `questions/`. Commands below assume you're running
-from the `wolverine/` root.
+from this repo's root (`PlaygroundCpp/`).
+
+See `docs/gameplan.md` for the current prep plan and priority order.
 
 ## Building & running
 
@@ -46,4 +48,21 @@ and set:
 1. `1_max_gain_streak.cpp` — maximum subarray sum (Kadane's algorithm)
 2. `2_price_divergence.cpp` — linear scan / threshold comparison across two arrays
 3. `3_largest_palindrome_product.cpp` — brute force vs. optimized, with timing
+4. `4_volume_spike_window.cpp` — fixed-size sliding window (max sum of any K consecutive days)
+5. `5_duplicate_order_id.cpp` — hash-set lookup (first repeated order ID)
+
+## Mini project (`mini_project/`)
+
+A small in-memory limit order book — see `docs/mini_project_research.md`
+for why, and the header comment in `mini_project/order_book.hpp` for the
+exact contract. Multi-file, not covered by `run.sh`; compile directly:
+```
+g++ -std=c++17 -O2 mini_project/main.cpp mini_project/order_book.cpp -o run && ./run
+```
+
+## Other docs
+- `docs/gameplan.md` — current prep plan and priority order
+- `docs/mini_project_research.md` — research on Wolverine's actual assessment format and trading-firm mini-project themes
+- `docs/questions.md` — conceptual questions for the live round (pointers/references, class/object, hash table/linked list, expected-value brainteasers)
+- `docs/techniques.md` — pattern-matching cheat sheet for coding problems
 
