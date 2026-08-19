@@ -12,19 +12,26 @@
 //   -> difference per day: 1, 2, 6, 7, 1
 //   -> indices where diff > 5: [2, 3]
 //
-// This mirrors the "notify when two stocks have achieved a price
-// difference greater than a given threshold" style question.
-//
 // Fill in findDivergences() below. Target: O(n) time.
 
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <numeric>
 using namespace std;
 
 vector<int> findDivergences(const vector<int>& stockA, const vector<int>& stockB, int threshold) {
-    // TODO: implement
-    return {};
+    //     check({100, 102, 105, 101, 98}, {101, 100, 99, 108, 97}, 5, {2, 3});
+    vector<int> above_threshold = {};
+    for (size_t index = 0; index < stockA.size(); index++) {
+        auto a_val = stockA[index];
+        auto b_val = stockB[index];
+        auto diff = abs(a_val - b_val);
+        if (diff > threshold) {
+            above_threshold.push_back(index);
+        }
+    }
+    return above_threshold;
 }
 
 void printVec(const vector<int>& v) {
