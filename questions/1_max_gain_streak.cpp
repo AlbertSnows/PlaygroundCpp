@@ -11,14 +11,8 @@
 #include <iostream>
 #include <vector>
 #include <numeric>
+#include "helpers/helpers.hpp"
 using namespace std;
-
-template<typename... Args>
-void dbg(Args&&... args) {
-    ((cout << args << " "), ...);
-    cout << "\n";
-}
-
 
 int maxGainStreak(const vector<int>& changes) {
     int start = 1;

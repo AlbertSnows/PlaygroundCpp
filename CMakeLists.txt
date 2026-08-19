@@ -8,4 +8,6 @@ include_directories(wolverine)
 add_executable(PlaygroundCpp
         questions/1_max_gain_streak.cpp
         questions/2_price_divergence.cpp
-        questions/3_largest_palindrome_product.cpp)
+        questions/3_largest_palindrome_product.cpp
+        helpers/helpers.hpp
+)
