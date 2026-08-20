@@ -1,10 +1,8 @@
 // MINI PROJECT: Limit Order Book
 //
-// A deliberately small in-memory limit order book -- price-time priority
-// matching on both sides, no threading, no persistence. Scoped to what's
-// reasonable to write and explain in a short assessment window, not a
-// from-scratch HFT engine. See docs/mini_project_research.md for why this
-// shape was chosen.
+// An in-memory limit order book
+// price-time priority
+// matching on both sides, no threading, no persistence.
 //
 // Rules:
 // - A Buy order matches against resting Sell orders priced <= its price,
@@ -18,18 +16,25 @@
 //   than any single resting order it crosses.
 
 #pragma once
+#include <deque>
+#include <map>
 #include <vector>
 #include <optional>
+#include <set>
+#include <unordered_map>
 
 enum class Side { Buy, Sell };
 
+// a request to transact(buy/sell) a symbol?
 struct Order {
     int id;
-    Side side;
+    Side side; // what kind of order it is
     double price;
-    int quantity;
+    int quantity; // number of orders
 };
 
+// the result of matching two orders
+// a trade occurs when the lowest sell price matches the highest buy price
 struct Trade {
     int buy_order_id;
     int sell_order_id;
@@ -38,7 +43,9 @@ struct Trade {
 };
 
 class OrderBook {
-public:
+
+    // callable from the outside
+    public:
     // Adds a new limit order. If it crosses the spread, matches
     // immediately against resting orders on the opposite side using
     // price-time priority, generating a Trade per match. Any unfilled
@@ -57,12 +64,18 @@ public:
     // Best (lowest) resting sell price, or nullopt if no sell orders rest.
     std::optional<double> bestAsk() const;
 
-private:
-    // TODO: pick the data structures. You need, per side:
-    //   - orders grouped by price
-    //   - within a price, FIFO order (time priority)
-    //   - fast lookup by order id for cancelOrder
-    // A common shape: std::map<double, std::deque<Order>> per side (map
-    // keeps prices sorted, deque preserves arrival order within a price),
-    // plus a separate id -> location index for O(1)-ish cancellation.
+    // only accessible from inside class
+    private:
+    // smallest key first by default
+    // [10, 11, 20, ...]
+    std::map<double, std::set<int>> selling_orders;
+    // highest buy price
+    // [29, 28, 21, ...]
+    std::map<double, std::set<int>, std::greater<>> buying_orders;
+    std::unordered_map<int, Order> order_index;
+    std::vector<Trade> trade_history;
+
+    int process_limit_order(const Order& order);
+    std::pair<Trade, std::optional<Order>> handle_transaction(const Order& buy_order, const Order& sell_order);
+
 };
