@@ -31,6 +31,9 @@ struct Order {
     Side side; // what kind of order it is
     double price;
     int quantity; // number of orders
+
+    Order(int id, Side side, double price, int quantity)
+        : id(id), side(side), price(price), quantity(quantity) {}
 };
 
 // the result of matching two orders
@@ -40,6 +43,9 @@ struct Trade {
     int sell_order_id;
     double price;    // the resting order's price, not the incoming order's
     int quantity;
+
+    Trade(int buy_id, int sell_id, double p, int qty)
+        : buy_order_id(buy_id), sell_order_id(sell_id), price(p), quantity(qty) {}
 };
 
 class OrderBook {
@@ -64,18 +70,25 @@ class OrderBook {
     // Best (lowest) resting sell price, or nullopt if no sell orders rest.
     std::optional<double> bestAsk() const;
 
-    // only accessible from inside class
-    private:
+    // Best (lowest) resting sell price, or nullopt if no sell orders rest.
+    bool cancelPrice(double price, Side side);
+
+    Order updateOrder(const Order &order);
+
+    // int process_limit_order(const Order& order);
+    // std::pair<Trade, std::optional<Order>> handle_transaction(const Order& buy_order, const Order& sell_order);
+    std::optional<Order> process_orders_at_price(Order limit_order, std::set<int> matching_orders);
     // smallest key first by default
     // [10, 11, 20, ...]
     std::map<double, std::set<int>> selling_orders;
     // highest buy price
-    // [29, 28, 21, ...]
-    std::map<double, std::set<int>, std::greater<>> buying_orders;
-    std::unordered_map<int, Order> order_index;
-    std::vector<Trade> trade_history;
+    // [21, 22, 28, ...]
+    std::map<double, std::set<int>> buying_orders;
 
-    int process_limit_order(const Order& order);
-    std::pair<Trade, std::optional<Order>> handle_transaction(const Order& buy_order, const Order& sell_order);
+    std::unordered_map<int, Order> order_index;
+
+    // only accessible from inside class
+    private:
+    std::vector<Trade> trade_history;
 
 };
