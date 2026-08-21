@@ -21,7 +21,7 @@ inline void hash_combine(size_t& seed, const T& v)
 }
 
 template <>
-struct hash<pair<int, int>>
+struct std::hash<pair<int, int>>
 {
 	size_t operator()(const pair<int,int>& k) const
 	{

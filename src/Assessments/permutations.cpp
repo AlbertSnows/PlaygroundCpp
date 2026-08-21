@@ -7,6 +7,8 @@
 #include <sstream>
 #include <cmath>
 #include "permutations.h"
+
+#include <algorithm>
 //using namespace std;
 
 //size_t operator()(vector<uint32_t> const& vec) const {
