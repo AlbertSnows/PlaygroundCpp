@@ -62,7 +62,7 @@ class OrderBook {
     // Removes a resting order by id. Returns true if found and removed,
     // false if no such order rests in the book (e.g. already fully filled
     // or never existed).
-    bool cancelOrder(int id);
+    bool cancelOrder(int order_id);
 
     // Best (highest) resting buy price, or nullopt if no buy orders rest.
     std::optional<double> bestBid() const;
@@ -73,11 +73,13 @@ class OrderBook {
     // Best (lowest) resting sell price, or nullopt if no sell orders rest.
     bool cancelPrice(double price, Side side);
 
-    Order updateOrder(const Order &order);
+    std::optional<Order> updateOrder(const Order &order);
 
     // int process_limit_order(const Order& order);
     // std::pair<Trade, std::optional<Order>> handle_transaction(const Order& buy_order, const Order& sell_order);
-    std::pair<std::optional<Order>, std::vector<Trade>> process_orders_at_price(Order limit_order, std::set<int> matching_orders);
+    std::pair<std::optional<Order>, std::vector<Trade>> process_orders_at_price(
+        const Order& limit_order,
+        const std::set<int>& matching_orders);
     // smallest key first by default
     // [10, 11, 20, ...]
     std::map<double, std::set<int>> selling_orders;
@@ -91,24 +93,27 @@ class OrderBook {
     private:
     std::vector<Trade> trade_history;
 
+    const std::map<double, std::set<int>>& get_order_by_side(Side side) const;  // const object → read-only access
+
+    const std::map<double, std::set<int>>& get_opposing_orders(Side side) const;
+
+    bool gap_is_crossed(const Order &order_inquiry) const;
+
+    std::pair<std::optional<Order>, std::vector<Trade>> transact_limit_order(Order limit_order);
+
+    std::vector<Trade> addLimitOrder(OrderBook& book, Order limit_order);
+
 };
 
-std::map<double, std::set<int>> get_order_by_side(const OrderBook& book, Side side);
+static std::pair<Trade, std::optional<Order>> process_one_order(const Order &buy_order, const Order &sell_order);
 
-std::map<double, std::set<int>> get_opposing_orders(const OrderBook& book, Side side);
+// template<typename T>
+// std::optional<T> take_first(std::set<T>& collection);
+//
+// template<typename T>
+// std::optional<T> take_last(std::set<T>& collection);
 
-bool gap_is_crossed(const Order &order_inquiry, const OrderBook& book);
+std::optional<int> get_closest_id(Side side, const std::set<int>& matching_orders);
 
-template<typename T>
-std::optional<T> take_first(std::set<T>& collection);
-
-template<typename T>
-std::optional<T> take_last(std::set<T>& collection);
-
-std::pair<Trade, std::optional<Order>> process_one_order(const Order &buy_order, const Order &sell_order);
-
-std::pair<std::optional<Order>, std::vector<Trade>> transact_limit_order(OrderBook book, Order limit_order);
-
-void upsert(std::map<double, std::set<int>> listing, double price, int order_id);
-
-std::vector<Trade> addLimitOrder(OrderBook book, Order limit_order);
+template<typename Map>
+void upsert(Map& mapping, typename Map::key_type key, typename Map::mapped_type::value_type value);
