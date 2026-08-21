@@ -1,6 +1,6 @@
 #include "order_book.hpp"
 
-const std::map<double, std::set<int> > &OrderBook::get_order_by_side(const Side side) const {
+const std::map<double, std::set<int>>& OrderBook::get_order_by_side(const Side side) const {
     return side == Side::Buy ? buying_orders : selling_orders;
 }
 
@@ -8,6 +8,11 @@ const std::map<double, std::set<int> > &OrderBook::get_order_by_side(const Side 
 const std::map<double, std::set<int>>& OrderBook::get_opposing_orders(const Side side) const {
     const auto opposing_side = side == Side::Buy ? Side::Sell : Side::Buy;
     return get_order_by_side(opposing_side);
+}
+
+template<typename T>
+T& make_writable(const T& ref) {
+    return const_cast<T&>(ref);
 }
 
 std::vector<Trade> OrderBook::addLimitOrder(OrderBook& book, Order limit_order) {
@@ -21,17 +26,20 @@ std::vector<Trade> OrderBook::addLimitOrder(OrderBook& book, Order limit_order) 
         const auto remaining_order = maybe_remaining_limit_order;
         if (remaining_order.has_value()) {
             limit_order = remaining_order.value();
+        } else {
+            limit_order.quantity = 0;
         }
         transactions_for_history.insert(
-            completed_transactions.begin(),
+            transactions_for_history.end(),
             completed_transactions.begin(),
             completed_transactions.end());
     }
-    book.order_index.insert_or_assign(limit_order.id, limit_order);
-    auto corresponding_orders = get_order_by_side(limit_order.side);
-    upsert(corresponding_orders, limit_order.price, limit_order.id);
 
-    book.order_index.insert_or_assign(limit_order.id, limit_order);
+    if (limit_order.quantity > 0) {
+        auto& corresponding_orders = make_writable(get_order_by_side(limit_order.side));
+        upsert(corresponding_orders, limit_order.price, limit_order.id);
+        book.order_index.insert_or_assign(limit_order.id, limit_order);
+    }
     return transactions_for_history;
 }
 
@@ -43,22 +51,34 @@ bool OrderBook::gap_is_crossed(const Order &order_inquiry) const {
     if (opposing_orders.empty()) {
         return false;
     }
-    const auto crossed_buy_gap = (is_buy && opposing_orders.rbegin()->first <= order_inquiry.price);
-    const auto crossed_sell_gap = (!is_buy && order_inquiry.price <= opposing_orders.begin()->first);
+    const auto crossed_buy_gap = (is_buy
+            && bestAsk().has_value()
+            && bestAsk().value() >= order_inquiry.price);
+    const auto crossed_sell_gap = (!is_buy
+            && bestBid().has_value()
+            && order_inquiry.price <= bestBid().value());
     return crossed_buy_gap || crossed_sell_gap;
 }
 
+std::optional<double> get_best_resting_price(Side side, const std::map<double, std::set<int>>& opposing_orders) {
+    if (opposing_orders.empty()) {
+        return std::nullopt;
+    }
+    auto order_is_buy = side == Side::Buy;
+    auto best_price = order_is_buy // want "best" sell
+        ? opposing_orders.begin()->first
+        : opposing_orders.rbegin()->first;
+    return best_price;
+}
 
 // we know the limit order crosses the gap
 std::pair<std::optional<Order>, std::vector<Trade>> OrderBook::transact_limit_order(
     Order limit_order) {
-    const auto opposing_orders = get_opposing_orders(limit_order.side);
+    const auto& opposing_orders = get_opposing_orders(limit_order.side);
     auto completed_transactions = std::vector<Trade>();
     while (limit_order.quantity > 0 && gap_is_crossed(limit_order)) {
-        const double best_price = limit_order.side == Side::Sell
-            ? opposing_orders.begin()->first
-            : opposing_orders.rbegin()->first;
-        const auto& matching_orders = opposing_orders.at(best_price);
+        const double best_price = get_best_resting_price(limit_order.side, opposing_orders).value();
+        auto& matching_orders = make_writable(opposing_orders.at(best_price));
         const auto [maybe_limit_order, transactions_at_price] =
             process_orders_at_price(limit_order, matching_orders);
         if (maybe_limit_order != std::nullopt) {
@@ -80,10 +100,10 @@ std::pair<std::optional<Order>, std::vector<Trade>> OrderBook::transact_limit_or
 
 std::pair<std::optional<Order>, std::vector<Trade>> OrderBook::process_orders_at_price(
     const Order& limit_order,
-    const std::set<int>& matching_orders) {
+    std::set<int>& matching_orders) {
     auto limit_order_state = limit_order;
     auto completed_transactions = std::vector<Trade>();
-    while (limit_order.quantity > 0 && !matching_orders.empty()) {
+    while (limit_order_state.quantity > 0 && !matching_orders.empty()) {
         const auto matching_id = get_closest_id(limit_order.side, matching_orders);
         if (matching_id == std::nullopt) {
             break;
@@ -118,17 +138,17 @@ std::pair<std::optional<Order>, std::vector<Trade>> OrderBook::process_orders_at
         /// was_last_matching_order ?
         /// if no matching order remains -> remove price
         /// else -> nothing
-        const auto was_last_matching_order = matching_orders.size() == 1;
-        if (was_last_matching_order & !matching_order_remains) {
-            cancelPrice(matching_order.price, matching_order.side);
-        }
+        // const auto was_last_matching_order = matching_orders.empty();
+        // if (was_last_matching_order & !matching_order_remains) {
+        //     cancelPrice(matching_order.price, matching_order.side);
+        // }
         completed_transactions.push_back(trade);
     }
 
     // ledger recorded at the same time orders are updated
     trade_history.insert(trade_history.end(), completed_transactions.begin(), completed_transactions.end());
-    const std::optional<Order> outcome = (limit_order.quantity > 0)
-        ? std::optional(limit_order)
+    const std::optional<Order> outcome = (limit_order_state.quantity > 0)
+        ? std::optional(limit_order_state)
         : std::nullopt;
     return {outcome, completed_transactions};
 }
@@ -155,21 +175,27 @@ bool OrderBook::cancelPrice(const double price, const Side side) {
 }
 
 bool OrderBook::cancelOrder(const int order_id) {
-    const std::optional maybe_order = order_index.at(order_id);
-    if (!maybe_order.has_value()) {
+    const std::optional maybe_order = order_index.find(order_id);
+    if (maybe_order == order_index.end()) {
         return false;
     }
-    const auto order_type = maybe_order.value().side;
-    const auto order_price = maybe_order.value().price;
+    const auto order = order_index.at(order_id);
+    const auto order_type = order.side;
+    const auto order_price = order.price;
     if (order_type == Side::Buy) {
-        auto orders_at_price = buying_orders[order_price];
+        auto& orders_at_price = buying_orders[order_price];
         orders_at_price.erase(order_id);
+        if (orders_at_price.empty()) {
+            buying_orders.erase(order_price);
+        }
     } else {
-        auto orders_at_price = selling_orders[order_price];
+        auto& orders_at_price = selling_orders[order_price];
         orders_at_price.erase(order_id);
+        if (orders_at_price.empty()) {
+            selling_orders.erase(order_price);
+        }
     }
     order_index.erase(order_id);
-
     return true;
 }
 
@@ -195,33 +221,35 @@ std::optional<int> get_closest_id(
     const std::set<int>& matching_orders) {
     if (matching_orders.empty()) return std::nullopt;
     return side == Side::Buy
-        ? *matching_orders.begin()
-        : *matching_orders.rbegin();
+        ? *matching_orders.rbegin()
+        : *matching_orders.begin();
 }
 
 // we assume the gap is crossed
 // either one or no order is returned, alongside the trade
 std::pair<Trade, std::optional<Order>> process_one_order(
-    const Order &buy_order,
-    const Order &sell_order) {
+    const Order &limit_order,
+    const Order &matching_order) {
+    const auto& buy_order = limit_order.side == Side::Buy ? limit_order : matching_order;
+    const auto& sell_order = limit_order.side == Side::Sell ? limit_order : matching_order;
     const auto buys_will_remain = buy_order.quantity > sell_order.quantity;
     const auto orders_will_cancel = buy_order.quantity == sell_order.quantity;
     if (orders_will_cancel) {
         return std::pair(Trade {
             buy_order.id,
             sell_order.id,
-            buy_order.price,
+            matching_order.price,
             buy_order.quantity,
         },
-                         std::nullopt);
+        std::nullopt);
     }
 
     if (buys_will_remain) {
         return std::pair(Trade {
             buy_order.id,
             sell_order.id,
-            buy_order.price,
-            buy_order.quantity,
+            matching_order.price,
+            sell_order.quantity,
         }, Order {
             buy_order.id,
             Side::Buy,
@@ -233,8 +261,8 @@ std::pair<Trade, std::optional<Order>> process_one_order(
     return std::pair(Trade {
                          buy_order.id,
                          sell_order.id,
-                         sell_order.price,
-                         sell_order.quantity,
+                         matching_order.price,
+                         buy_order.quantity,
                      }, Order {
                          sell_order.id,
                          Side::Sell,
@@ -248,7 +276,7 @@ void upsert(Map& mapping, typename Map::key_type key, typename Map::mapped_type:
 
     const auto key_exists = mapping.find(key) != mapping.end();
     if (key_exists) {
-        auto collection = mapping.at(key);
+        auto& collection = mapping.at(key);
         collection.insert(value);
     } else {
         mapping[key] = std::set{value};
@@ -274,8 +302,3 @@ void upsert(Map& mapping, typename Map::key_type key, typename Map::mapped_type:
 //     }
 //     return std::nullopt;
 // }
-
-template<typename T>
-T& make_writable(const T& ref) {
-    return const_cast<T&>(ref);
-}

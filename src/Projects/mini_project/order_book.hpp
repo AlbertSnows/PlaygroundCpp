@@ -79,7 +79,7 @@ class OrderBook {
     // std::pair<Trade, std::optional<Order>> handle_transaction(const Order& buy_order, const Order& sell_order);
     std::pair<std::optional<Order>, std::vector<Trade>> process_orders_at_price(
         const Order& limit_order,
-        const std::set<int>& matching_orders);
+        std::set<int>& matching_orders);
     // smallest key first by default
     // [10, 11, 20, ...]
     std::map<double, std::set<int>> selling_orders;
@@ -88,6 +88,8 @@ class OrderBook {
     std::map<double, std::set<int>> buying_orders;
 
     std::unordered_map<int, Order> order_index;
+
+    std::vector<Trade> addLimitOrder(OrderBook& book, Order limit_order);
 
     // only accessible from inside class
     private:
@@ -101,7 +103,6 @@ class OrderBook {
 
     std::pair<std::optional<Order>, std::vector<Trade>> transact_limit_order(Order limit_order);
 
-    std::vector<Trade> addLimitOrder(OrderBook& book, Order limit_order);
 
 };
 
@@ -117,3 +118,7 @@ std::optional<int> get_closest_id(Side side, const std::set<int>& matching_order
 
 template<typename Map>
 void upsert(Map& mapping, typename Map::key_type key, typename Map::mapped_type::value_type value);
+
+
+template<typename T>
+T& make_writable(const T& ref);
