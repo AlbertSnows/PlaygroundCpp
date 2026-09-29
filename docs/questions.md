@@ -5,6 +5,13 @@ These come up directly in the live interview round, not as coding problems:
   a reference must be bound at declaration and can never be null or rebound.
   Pointers need `*`/`&` to dereference/take address; references act like an
   alias to the original variable.
+  - suppose x = 5
+    - x is the local name of th e memory address, 5 is the value in the slot
+  - suppose int& ref = x
+    - then ref = 10;
+  - T& x = Y, is a reference to y.
+
+
 - **Class vs. object** — a class is the blueprint/type definition; an object
   is a concrete instance of that type allocated in memory.
 - **Hash table vs. linked list** — hash table: O(1) average lookup/insert,
@@ -51,3 +58,30 @@ from the CS/coding/probability content above:
   chance of a large favorable move), and more time to expiration → higher
   price (more time value). Assumes the underlying follows a lognormal
   random walk (geometric Brownian motion) with no arbitrage opportunities.
+- **The Greeks** — sensitivities of an option's price to one underlying
+  input at a time (partial derivatives, informally):
+  - *Delta* — change in option price per $1 move in the underlying. Calls:
+    0 to 1; puts: -1 to 0. Roughly tracks probability of expiring ITM, and
+    doubles as a hedge ratio (delta-hedging: hold delta shares of the
+    underlying per option to offset small price moves).
+  - *Gamma* — change in delta per $1 move in the underlying (delta's own
+    sensitivity). Highest for at-the-money options near expiration —
+    delta swings fastest there.
+  - *Theta* — change in option price per day of time passing, holding
+    everything else fixed. Usually negative for a held (long) option —
+    this is "theta decay," the time value bleeding away as expiration
+    nears.
+  - *Vega* — change in option price per 1-point move in implied
+    volatility. Higher for longer-dated options (more time for
+    volatility to matter).
+  - *Rho* — change in option price per 1% move in the risk-free rate;
+    usually the least emphasized Greek in interviews.
+- **Put-call parity** — a no-arbitrage relationship linking a call and put
+  at the *same* strike and expiration on the same underlying:
+  `Call - Put = Underlying Price - Strike (discounted to present value)`.
+  Intuition: holding a call + cash equal to the discounted strike produces
+  the same payoff at expiration as holding a put + one share of the
+  underlying — both replicate "own the stock, floor the downside at the
+  strike." If the equation doesn't hold, there's a risk-free arbitrage
+  (buy the cheap side, sell the expensive side). Useful as a sanity check
+  and for deriving one option's price from the other.
